@@ -1,0 +1,37 @@
+#!/bin/bash
+
+if [ "$#" -ne 1 ] || ! [ -d "$1" ]; then
+  echo "Usage: $0 [DIRECTORY_PATH]" >&2
+  exit 1
+fi
+
+PATH=${HOME}/x-tools/aarch64-rpi4-linux-gnu/bin/:$PATH
+export CROSS_COMPILE_ROM='aarch64-rpi4-linux-gnu-'
+export ARCH_ROM='arm64'
+
+mkdir rootfs && cd rootfs
+mkdir {bin,dev,etc,home,lib64,proc,sbin,sys,tmp,usr,var}
+mkdir usr/{bin,lib,sbin}
+mkdir var/log
+ln -s lib64 lib
+
+#mkdir rootfs && cd rootfs && mkdir {bin,dev,etc,home,lib64,proc,sbin,sys,tmp,usr,var} && mkdir usr/{bin,lib,sbin} && mkdir var/log && ln -s lib64 lib
+
+my_pwd=$(pwd)
+busybox_dir=($1)
+
+sudo chown -R root:root *
+
+cd $busybox_dir
+
+make ARCH=$ARCH_ROM CROSS_COMPILE=$CROSS_COMPILE_ROM distclean
+make ARCH=$ARCH_ROM CROSS_COMPILE=$CROSS_COMPILE_ROM defconfig
+#echo "CONFIG_PREFIX='$my_pwd'" >> .config
+echo "Add $my_pwd to Setting->Destination path for make install"
+make ARCH=$ARCH_ROM CROSS_COMPILE=$CROSS_COMPILE_ROM menuconfig
+make ARCH=$ARCH_ROM CROSS_COMPILE=$CROSS_COMPILE_ROM
+sudo make ARCH=$ARCH_ROM CROSS_COMPILE=$CROSS_COMPILE_ROM install
+
+
+
+
